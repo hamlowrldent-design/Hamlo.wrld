@@ -72,7 +72,10 @@ const CONFIG = {
   },
 };
 
-function classNames(...xs) {
+function classNames(...xs: Array<string | false | null | undefined>) {
+  return xs.filter(Boolean).join(" ");
+}
+
   return xs.filter(Boolean).join(" ");
 }
 
