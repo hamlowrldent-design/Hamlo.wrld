@@ -76,18 +76,34 @@ function classNames(...xs: Array<string | false | null | undefined>) {
   return xs.filter(Boolean).join(" ");
 }
 
-const FadeIn = ({ children, delay = 0 }) => (
+const FadeIn = ({
+  children,
+  delay = 0,
+}: {
+  children: React.ReactNode;
+  delay?: number;
+}) => (
   <motion.div
     initial={{ opacity: 0, y: 20 }}
     whileInView={{ opacity: 1, y: 0 }}
     viewport={{ once: true, amount: 0.2 }}
-    transition={{ duration: 0.8, delay }}
+    transition={{ duration: 0.85, delay }}
   >
     {children}
   </motion.div>
 );
 
-function MerchCard({ item }) {
+type MerchItem = {
+  id: string;
+  name: string;
+  price: string;
+  note: string;
+  image: string;
+  url: string;
+};
+
+
+function MerchCard({ item }: { item: MerchItem }) {
   return (
     <motion.a
       href={item.url}
@@ -115,7 +131,7 @@ function MerchCard({ item }) {
 }
 
 function CosmicBackdrop() {
-  const canvasRef = React.useRef(null);
+  const canvasRef = React.useRef<HTMLCanvasElement | null>(null);
   const [variant, setVariant] = useState(0);
 
   // Background variants: subtle changes in blob positions + intensity.
@@ -143,6 +159,8 @@ function CosmicBackdrop() {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext("2d");
+if (!ctx) return;
+
 
     let w = 0;
     let h = 0;
@@ -150,9 +168,21 @@ function CosmicBackdrop() {
 
     const DPR = Math.min(2, window.devicePixelRatio || 1);
 
-    const rand = (min, max) => min + Math.random() * (max - min);
+    const rand = (min: number, max: number): number =>
+  min + Math.random() * (max - min);
 
-    let stars = [];
+type Star = {
+  x: number;
+  y: number;
+  r: number;
+  a: number;
+  vx: number;
+  vy: number;
+};
+
+
+let stars: Star[] = [];
+
 
     const resize = () => {
       w = Math.floor(window.innerWidth);
