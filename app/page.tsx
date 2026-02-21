@@ -336,6 +336,13 @@ export default function DropMerchPage() {
 </a>
 
 <a
+  href="/listen"
+  className="rounded-full border border-white/20 px-6 py-3 text-sm font-semibold text-white/80 hover:bg-white/10"
+>
+  Listen
+</a>
+
+<a
   href="/games"
   className="rounded-full border border-white/20 px-6 py-3 text-sm font-semibold text-white/80 hover:bg-white/10"
 >
