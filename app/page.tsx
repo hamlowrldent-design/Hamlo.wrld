@@ -354,11 +354,47 @@ export default function DropMerchPage() {
           </FadeIn>
         </div>
       </header>
+{/* PORTALS */}
+<section className="relative z-10">
+  <div className="mx-auto -mt-10 grid max-w-4xl gap-6 px-6 md:grid-cols-2">
+    <a
+      href="/vault"
+      className="group rounded-3xl border border-white/10 bg-black/35 p-8 backdrop-blur transition hover:bg-black/30"
+    >
+      <div className="text-xs uppercase tracking-[0.3em] text-white/40">
+        Interdimensional Lock
+      </div>
+      <div className="mt-3 text-2xl font-semibold text-white">Vault</div>
+      <div className="mt-2 text-sm text-white/60">
+        Seasonal code. Unreleased transmissions. Sealed chamber between eras.
+      </div>
+      <div className="mt-6 text-sm font-semibold text-white/80">
+        Enter <span className="opacity-70">→</span>
+      </div>
+    </a>
+
+    <a
+      href="/games"
+      className="group rounded-3xl border border-white/10 bg-black/35 p-8 backdrop-blur transition hover:bg-black/30"
+    >
+      <div className="text-xs uppercase tracking-[0.3em] text-white/40">
+        Skill Chambers
+      </div>
+      <div className="mt-3 text-2xl font-semibold text-white">Trials</div>
+      <div className="mt-2 text-sm text-white/60">
+        Competitive tests. Myth-coded. Built in-house for full control.
+      </div>
+      <div className="mt-6 text-sm font-semibold text-white/80">
+        Enter <span className="opacity-70">→</span>
+      </div>
+    </a>
+  </div>
+</section>
 
       {/* MANIFESTO */}
       <section className="mx-auto max-w-4xl px-6 py-32 text-center">
         <FadeIn>
-          <p className="text-xl leading-relaxed tracking-wide text-white/60 md:text-2xl">
+          <p className="text-xl leading-relaxed tracking-wide text-white/60">
             Asked the devil what she’d take — told me more than I could make.
             <br />
             Started living out a nightmare.
