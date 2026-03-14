@@ -13,6 +13,13 @@ type Trial = {
 };
 
 const TRIALS: Trial[] = [
+{
+    id: "trial-glyph",
+    title: "Trial I — Glyph Gauntlet",
+    subtitle: "Accuracy + survival. Hit true glyphs. Avoid bait.",
+    status: "Live",
+    href: "/games/glyph-gauntlet",
+  },
   {
     id: "trial-01",
     title: "Trial I — Reflex",

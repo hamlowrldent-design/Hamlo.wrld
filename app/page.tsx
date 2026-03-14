@@ -13,6 +13,8 @@ import {
   Sparkles,
 } from "lucide-react";
 
+import EmailCapture from "@/components/EmailCapture";
+
 // Cosmic / Abstract / Layered / Dark version
 // Brand direction: intentional, metaphysical, disciplined.
 
@@ -474,21 +476,8 @@ export default function DropMerchPage() {
               Direct drops. Essays. Signals. No noise.
             </p>
 
-            <form className="mt-6 flex flex-col gap-4 sm:flex-row sm:justify-center">
-              <input
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                type="email"
-                placeholder="you@email.com"
-                className="w-full max-w-md rounded-full border border-white/20 bg-black/50 px-5 py-3 text-sm text-white placeholder:text-white/40 focus:outline-none"
-              />
-              <button
-                type="submit"
-                className="rounded-full bg-white px-6 py-3 text-sm font-semibold text-black hover:bg-white/90"
-              >
-                Enter
-              </button>
-            </form>
+<EmailCapture source="homepage" />
+
           </div>
         </FadeIn>
       </section>
