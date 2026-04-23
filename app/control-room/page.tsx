@@ -13,12 +13,17 @@ function StatusDot({ live }: { live: boolean }) {
   return (
     <span
       className={classNames(
-        "inline-block h-3 w-3 rounded-full ring-4",
-        live
-          ? "bg-emerald-400 ring-emerald-400/20 shadow-[0_0_18px_rgba(74,222,128,0.75)]"
-          : "bg-red-400 ring-red-400/20 shadow-[0_0_16px_rgba(248,113,113,0.45)]"
+        "relative inline-flex h-3 w-3 rounded-full",
+        live ? "bg-emerald-400" : "bg-red-400"
       )}
-    />
+    >
+      <span
+        className={classNames(
+          "absolute inset-0 rounded-full animate-ping",
+          live ? "bg-emerald-400/60" : "bg-red-400/50"
+        )}
+      />
+    </span>
   );
 }
 
@@ -46,18 +51,14 @@ function StreamCard({
   return (
     <div
       className={classNames(
-        "group relative overflow-hidden rounded-[2rem] border bg-black/35 backdrop-blur transition",
-        selected ? "border-white/25" : "border-white/10",
+        "group relative overflow-hidden rounded-[2rem] border bg-black/35 backdrop-blur-xl transition duration-300",
+        selected ? "border-white/25 shadow-[0_0_30px_rgba(255,255,255,0.06)]" : "border-white/10",
         featured ? "p-6" : "p-5"
       )}
     >
-      <div
-        className={classNames(
-          "absolute inset-0 bg-gradient-to-br opacity-70",
-          streamer.color
-        )}
-      />
-      <div className="absolute inset-0 bg-[radial-gradient(500px_220px_at_20%_10%,rgba(255,255,255,0.14),transparent_55%)]" />
+      <div className={classNames("absolute inset-0 bg-gradient-to-br opacity-70", streamer.color)} />
+      <div className="absolute inset-0 bg-[radial-gradient(700px_260px_at_20%_0%,rgba(255,255,255,0.12),transparent_55%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(255,255,255,0.05),transparent_20%,transparent_80%,rgba(255,255,255,0.03))]" />
       <div className="relative z-10 flex h-full flex-col justify-between gap-6">
         <div className="flex items-start justify-between gap-4">
           <div>
@@ -133,37 +134,28 @@ function FeedPane({
 }) {
   const parents = ["localhost", "hamlowrld.com", "www.hamlowrld.com"];
   const parentQuery = parents.map((p) => `parent=${encodeURIComponent(p)}`).join("&");
-
   const twitchSrc = `https://player.twitch.tv/?channel=${encodeURIComponent(
     streamer.channelName
   )}&${parentQuery}&muted=true`;
 
   return (
-    <div className="group relative overflow-hidden rounded-[2rem] border border-white/10 bg-black/40 backdrop-blur">
-      <div
-        className={classNames(
-          "absolute inset-0 bg-gradient-to-br opacity-40",
-          streamer.color
-        )}
-      />
-      <div className="absolute inset-0 bg-black/20" />
+    <div className="group relative overflow-hidden rounded-[2rem] border border-white/10 bg-black/45 backdrop-blur-xl shadow-[0_0_40px_rgba(0,0,0,0.35)]">
+      <div className={classNames("absolute inset-0 bg-gradient-to-br opacity-55", streamer.color)} />
+      <div className="absolute inset-0 bg-[radial-gradient(900px_320px_at_15%_0%,rgba(255,255,255,0.12),transparent_55%)]" />
+      <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(255,255,255,0.05),transparent_18%,transparent_82%,rgba(255,255,255,0.03))]" />
+      <div className="absolute inset-0 ring-1 ring-white/5 rounded-[2rem]" />
 
       <div
         className={classNames(
           "relative z-10 flex h-full flex-col justify-between",
-          large ? "min-h-[420px] p-4" : "min-h-[240px] p-4"
+          large ? "min-h-[460px] p-4" : "min-h-[260px] p-4"
         )}
       >
         <div className="mb-4 flex items-start justify-between gap-4">
           <div className="flex items-center gap-3">
             <StatusDot live={streamer.live} />
             <div>
-              <div
-                className={classNames(
-                  "font-semibold text-white",
-                  large ? "text-2xl" : "text-lg"
-                )}
-              >
+              <div className={classNames("font-semibold text-white", large ? "text-2xl" : "text-lg")}>
                 {streamer.name}
               </div>
               <div className="text-sm text-white/55">{streamer.handle}</div>
@@ -172,7 +164,7 @@ function FeedPane({
           <PlatformPill platform={streamer.platform} />
         </div>
 
-        <div className="rounded-[1.5rem] border border-white/10 bg-black/30 p-3">
+        <div className="rounded-[1.5rem] border border-white/10 bg-black/35 p-3 shadow-inner shadow-black/30">
           <div className="mb-3 flex items-center justify-between">
             <div className="text-xs uppercase tracking-[0.25em] text-white/40">
               Live Feed
@@ -189,10 +181,19 @@ function FeedPane({
 
           <div
             className={classNames(
-              "overflow-hidden rounded-[1.25rem] border border-white/10 bg-black/30",
+              "relative overflow-hidden rounded-[1.25rem] border border-white/10 bg-black/40",
               large ? "aspect-video" : "aspect-[16/10]"
             )}
           >
+            <div className="pointer-events-none absolute inset-0 z-10 opacity-20 [background-image:linear-gradient(rgba(255,255,255,0.10)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.10)_1px,transparent_1px)] [background-size:40px_40px]" />
+            <div className="pointer-events-none absolute inset-0 z-10 bg-[linear-gradient(to_bottom,rgba(255,255,255,0.03),transparent_25%,transparent_75%,rgba(255,255,255,0.03))]" />
+            <div className="absolute left-4 top-4 z-20 rounded-full border border-white/10 bg-black/45 px-3 py-1 text-[10px] uppercase tracking-[0.25em] text-white/50">
+              active perspective
+            </div>
+            <div className="absolute bottom-4 left-4 z-20 text-sm text-white/70">
+              {streamer.title}
+            </div>
+
             {streamer.platform === "Twitch" ? (
               <iframe
                 src={twitchSrc}
@@ -226,7 +227,7 @@ function BroadcastWall({
 
   if (count === 0) {
     return (
-      <div className="rounded-[2rem] border border-white/10 bg-black/30 p-8 text-white/50 backdrop-blur">
+      <div className="rounded-[2rem] border border-white/10 bg-black/30 p-8 text-white/50 backdrop-blur-xl">
         No active feeds.
       </div>
     );
@@ -290,57 +291,55 @@ export default function ControlRoomPage() {
   const [layoutMode, setLayoutMode] = useState<LayoutMode>("auto");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [focusedId, setFocusedId] = useState<string>("hamlo");
-const [liveSyncState, setLiveSyncState] = useState<"idle" | "loading" | "ok" | "error">("idle");
+  const [liveSyncState, setLiveSyncState] = useState<"idle" | "loading" | "ok" | "error">("idle");
 
-useEffect(() => {
-  let cancelled = false;
+  useEffect(() => {
+    let cancelled = false;
 
-  async function syncTwitchLiveStatus() {
-    try {
-      setLiveSyncState("loading");
+    async function syncTwitchLiveStatus() {
+      try {
+        setLiveSyncState("loading");
 
-      const res = await fetch("/api/twitch/live", { cache: "no-store" });
-      const data = await res.json();
+        const res = await fetch("/api/twitch/live", { cache: "no-store" });
+        const data = await res.json();
 
-      if (!res.ok || !data.ok) {
-        throw new Error(data?.error || "Failed to sync Twitch live status");
+        if (!res.ok || !data.ok) {
+          throw new Error(data?.error || "Failed to sync Twitch live status");
+        }
+
+        if (cancelled) return;
+
+        const liveMap = new Map<string, boolean>();
+        for (const item of data.live as Array<{ id: string; live: boolean }>) {
+          liveMap.set(item.id, item.live);
+        }
+
+        setStreamers((prev) =>
+          prev.map((s) =>
+            s.platform === "Twitch"
+              ? { ...s, live: liveMap.get(s.id) ?? false }
+              : s
+          )
+        );
+
+        setLiveSyncState("ok");
+      } catch {
+        if (!cancelled) setLiveSyncState("error");
       }
-
-      if (cancelled) return;
-
-      const liveMap = new Map<string, boolean>();
-      for (const item of data.live as Array<{ id: string; live: boolean }>) {
-        liveMap.set(item.id, item.live);
-      }
-
-      setStreamers((prev) =>
-        prev.map((s) =>
-          s.platform === "Twitch"
-            ? { ...s, live: liveMap.get(s.id) ?? false }
-            : s
-        )
-      );
-
-      setLiveSyncState("ok");
-    } catch {
-      if (!cancelled) setLiveSyncState("error");
     }
-  }
 
-  syncTwitchLiveStatus();
-  const interval = setInterval(syncTwitchLiveStatus, 60000);
+    syncTwitchLiveStatus();
+    const interval = setInterval(syncTwitchLiveStatus, 60000);
 
-  return () => {
-    cancelled = true;
-    clearInterval(interval);
-  };
-}, []);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, []);
 
   const active = useMemo(() => streamers.filter((s) => s.live), [streamers]);
   const dormant = useMemo(() => streamers.filter((s) => !s.live), [streamers]);
-
   const activeIds = new Set(active.map((s) => s.id));
-
   const cleanedSelectedIds = selectedIds.filter((id) => activeIds.has(id));
 
   const selectedFeeds = cleanedSelectedIds
@@ -413,8 +412,9 @@ useEffect(() => {
   return (
     <main className="min-h-screen bg-neutral-950 text-white">
       <div className="pointer-events-none fixed inset-0 -z-10">
-        <div className="absolute inset-0 bg-[radial-gradient(900px_600px_at_20%_10%,rgba(255,255,255,0.08),transparent_60%),radial-gradient(900px_600px_at_80%_30%,rgba(255,255,255,0.05),transparent_65%),radial-gradient(1000px_700px_at_50%_90%,rgba(255,255,255,0.06),transparent_70%)] blur-2xl" />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/55 to-neutral-950" />
+        <div className="absolute inset-0 bg-[radial-gradient(1000px_700px_at_15%_10%,rgba(255,255,255,0.09),transparent_60%),radial-gradient(900px_600px_at_80%_25%,rgba(255,255,255,0.05),transparent_65%),radial-gradient(1100px_800px_at_50%_95%,rgba(255,255,255,0.06),transparent_70%)] blur-3xl" />
+        <div className="absolute inset-0 opacity-[0.06] [background-image:linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px)] [background-size:52px_52px]" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/55 to-neutral-950" />
       </div>
 
       <div className="mx-auto max-w-7xl px-6 py-14">
@@ -430,6 +430,9 @@ useEffect(() => {
               View multiple live perspectives at once. The wall reshapes itself by who is on,
               and viewers can override the layout to build their own best perspective.
             </p>
+            <div className="mt-4 text-xs text-white/45">
+              Twitch sync: {liveSyncState}
+            </div>
           </div>
 
           <a
@@ -440,7 +443,7 @@ useEffect(() => {
           </a>
         </div>
 
-        <section className="mt-10 rounded-[2rem] border border-white/10 bg-black/30 p-5 backdrop-blur">
+        <section className="mt-10 rounded-[2rem] border border-white/10 bg-black/30 p-5 backdrop-blur-xl shadow-[0_0_40px_rgba(0,0,0,0.25)]">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <div className="text-xs uppercase tracking-[0.3em] text-white/40">
@@ -533,7 +536,7 @@ useEffect(() => {
           </div>
         </section>
 
-        <section className="mt-14 rounded-[2rem] border border-white/10 bg-black/30 p-6 backdrop-blur">
+        <section className="mt-14 rounded-[2rem] border border-white/10 bg-black/30 p-6 backdrop-blur-xl shadow-[0_0_40px_rgba(0,0,0,0.25)]">
           <div className="text-xs uppercase tracking-[0.3em] text-white/40">
             Prototype Controls
           </div>
