@@ -1,7 +1,7 @@
 "use client";
 
 import { STREAM_MEMBERS, type StreamMember, type Platform } from "@/lib/streamers";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 
 type LayoutMode = "auto" | "focus-1" | "focus-2" | "focus-3" | "quad";
 
@@ -290,6 +290,51 @@ export default function ControlRoomPage() {
   const [layoutMode, setLayoutMode] = useState<LayoutMode>("auto");
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [focusedId, setFocusedId] = useState<string>("hamlo");
+const [liveSyncState, setLiveSyncState] = useState<"idle" | "loading" | "ok" | "error">("idle");
+
+useEffect(() => {
+  let cancelled = false;
+
+  async function syncTwitchLiveStatus() {
+    try {
+      setLiveSyncState("loading");
+
+      const res = await fetch("/api/twitch/live", { cache: "no-store" });
+      const data = await res.json();
+
+      if (!res.ok || !data.ok) {
+        throw new Error(data?.error || "Failed to sync Twitch live status");
+      }
+
+      if (cancelled) return;
+
+      const liveMap = new Map<string, boolean>();
+      for (const item of data.live as Array<{ id: string; live: boolean }>) {
+        liveMap.set(item.id, item.live);
+      }
+
+      setStreamers((prev) =>
+        prev.map((s) =>
+          s.platform === "Twitch"
+            ? { ...s, live: liveMap.get(s.id) ?? false }
+            : s
+        )
+      );
+
+      setLiveSyncState("ok");
+    } catch {
+      if (!cancelled) setLiveSyncState("error");
+    }
+  }
+
+  syncTwitchLiveStatus();
+  const interval = setInterval(syncTwitchLiveStatus, 60000);
+
+  return () => {
+    cancelled = true;
+    clearInterval(interval);
+  };
+}, []);
 
   const active = useMemo(() => streamers.filter((s) => s.live), [streamers]);
   const dormant = useMemo(() => streamers.filter((s) => !s.live), [streamers]);
