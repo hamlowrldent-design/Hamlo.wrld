@@ -20,7 +20,7 @@ import EmailCapture from "@/components/EmailCapture";
 
 const CONFIG = {
   artistName: "Hamlo.wrld",
-  dropTitle: "CARE FUL",
+  dropTitle: "CAREFUL",
   dropTagline:
     "Asked the devil what she’d take — told me more than I could make. Transmutation has a cost.",
 
@@ -342,6 +342,13 @@ export default function DropMerchPage() {
   className="rounded-full border border-white/20 px-6 py-3 text-sm font-semibold text-white/80 hover:bg-white/10"
 >
   Catalog
+</a>
+
+<a
+  href="/control-room"
+  className="rounded-full border border-white/20 px-6 py-3 text-sm font-semibold text-white/80 hover:bg-white/10"
+>
+  Control Room
 </a>
 
 <a
