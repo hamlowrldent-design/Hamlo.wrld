@@ -35,4 +35,15 @@ export const STREAM_MEMBERS: StreamMember[] = [
     title: "Dormant",
     color: "from-emerald-500/20 to-white/5",
   },
+{
+  id: "thruthatlane",
+  name: "Thru That Lane Entertainment",
+  handle: "@thruthatlaneentertainment",
+  platform: "Twitch",
+  channelName: "thruthatlaneentertainment",
+  channelUrl: "https://www.twitch.tv/thruthatlaneentertainment",
+  live: false,
+  title: "Signal Feed",
+  color: "from-purple-500/20 to-white/5",
+}
 ];
