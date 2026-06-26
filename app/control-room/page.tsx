@@ -1,7 +1,7 @@
 "use client";
 
 import { STREAM_MEMBERS, type StreamMember, type Platform } from "@/lib/streamers";
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 type LayoutMode = "auto" | "focus-1" | "focus-2" | "focus-3" | "quad";
 
@@ -124,8 +124,250 @@ function StreamCard({
     </div>
   );
 }
+type StreamChatMessage = {
+  id: string;
+  streamerId: string;
+  authorName: string;
+  text: string;
+  createdAtMs: number;
+};
 
-function FeedPane({
+type StreamChatClientToServer =
+  | {
+      t: "stream.join";
+      streamerId: string;
+      displayName?: string;
+    }
+  | {
+      t: "stream.chat.send";
+      streamerId: string;
+      text: string;
+    };
+
+type StreamChatServerToClient =
+  | {
+      t: "welcome";
+      clientId: string;
+      serverNowMs: number;
+    }
+  | {
+      t: "stream.snapshot";
+      streamerId: string;
+      displayName?: string;
+      chat: StreamChatMessage[];
+      viewers: number;
+    }
+  | {
+      t: "stream.chat";
+      streamerId: string;
+      chat: StreamChatMessage[];
+    }
+  | {
+      t: "stream.viewers";
+      streamerId: string;
+      viewers: number;
+    }
+  | {
+      t: "error";
+      message: string;
+    };
+
+function StreamChatPanel({
+  streamerId,
+  streamerName,
+}: {
+  streamerId: string;
+  streamerName: string;
+}) {
+  const wsRef = useRef<WebSocket | null>(null);
+  const endRef = useRef<HTMLDivElement | null>(null);
+
+  const [displayName, setDisplayName] = useState("");
+  const [savedName, setSavedName] = useState("");
+  const [message, setMessage] = useState("");
+  const [chat, setChat] = useState<StreamChatMessage[]>([]);
+  const [viewers, setViewers] = useState(0);
+  const [connected, setConnected] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
+
+  function send(msg: StreamChatClientToServer) {
+    const ws = wsRef.current;
+    if (!ws || ws.readyState !== WebSocket.OPEN) return;
+    ws.send(JSON.stringify(msg));
+  }
+
+  function saveName() {
+    setSavedName(displayName.trim());
+  }
+
+  function sendMessage() {
+    const text = message.trim();
+    if (!text) return;
+
+    send({
+      t: "stream.chat.send",
+      streamerId,
+      text,
+    });
+
+    setMessage("");
+  }
+
+  useEffect(() => {
+    const ws = new WebSocket("ws://localhost:4100/ws");
+    wsRef.current = ws;
+
+    ws.onopen = () => {
+      setConnected(true);
+      ws.send(
+        JSON.stringify({
+          t: "stream.join",
+          streamerId,
+          displayName: savedName || undefined,
+        })
+      );
+    };
+
+    ws.onmessage = (event) => {
+      try {
+        const msg = JSON.parse(event.data) as StreamChatServerToClient;
+
+        if (msg.t === "stream.snapshot" && msg.streamerId === streamerId) {
+          setChat(msg.chat);
+          setViewers(msg.viewers);
+          if (msg.displayName && !savedName) {
+            setDisplayName(msg.displayName);
+            setSavedName(msg.displayName);
+          }
+          return;
+        }
+
+        if (msg.t === "stream.chat" && msg.streamerId === streamerId) {
+          setChat(msg.chat);
+          return;
+        }
+
+        if (msg.t === "stream.viewers" && msg.streamerId === streamerId) {
+          setViewers(msg.viewers);
+          return;
+        }
+      } catch {
+        // ignore parse errors
+      }
+    };
+
+    ws.onclose = () => {
+      setConnected(false);
+    };
+
+    ws.onerror = () => {
+      setConnected(false);
+    };
+
+    return () => {
+      ws.close();
+    };
+  }, [streamerId, savedName]);
+
+  useEffect(() => {
+    endRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [chat]);
+
+  return (
+    <div className="relative z-20">
+      <div className="flex justify-end">
+        <button
+          onClick={() => setIsOpen((prev) => !prev)}
+          className="rounded-full border border-white/15 bg-black/70 px-4 py-2 text-sm font-semibold text-white/85 hover:bg-white/10"
+        >
+          {isOpen ? "Close Chat" : `Chat • ${viewers}`}
+        </button>
+      </div>
+
+      {isOpen ? (
+        <div className="absolute right-0 top-12 z-30 w-[22rem] max-w-[calc(100vw-3rem)] rounded-[1.5rem] border border-white/10 bg-black/90 p-4 shadow-2xl backdrop-blur-xl">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <div className="text-xs uppercase tracking-[0.22em] text-white/40">
+                Stream Chat
+              </div>
+              <div className="mt-1 text-sm text-white/70">{streamerName}</div>
+            </div>
+
+            <div className="text-right text-xs text-white/45">
+              {connected ? "Connected" : "Offline"}<br />
+              {viewers} viewer(s)
+            </div>
+          </div>
+
+          <div className="mt-4 flex gap-2">
+            <input
+              value={displayName}
+              onChange={(e) => setDisplayName(e.target.value)}
+              placeholder="your display name"
+              className="w-full rounded-full border border-white/10 bg-black/40 px-4 py-2 text-sm text-white outline-none placeholder:text-white/30"
+            />
+            <button
+              onClick={saveName}
+              className="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white/80 hover:bg-white/10"
+            >
+              Save
+            </button>
+          </div>
+
+          <div className="mt-4 h-64 overflow-y-auto rounded-[1.25rem] border border-white/10 bg-black/30 p-3">
+            <div className="space-y-3">
+              {chat.length > 0 ? (
+                chat.map((entry) => (
+                  <div
+                    key={entry.id}
+                    className="rounded-[1rem] border border-white/10 bg-black/30 p-3"
+                  >
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="text-sm font-semibold text-white/80">
+                        {entry.authorName}
+                      </div>
+                      <div className="text-xs text-white/40">
+                        {new Date(entry.createdAtMs).toLocaleTimeString()}
+                      </div>
+                    </div>
+                    <div className="mt-2 text-sm text-white/70">{entry.text}</div>
+                  </div>
+                ))
+              ) : (
+                <div className="text-sm text-white/45">No stream comments yet.</div>
+              )}
+              <div ref={endRef} />
+            </div>
+          </div>
+
+          <div className="mt-4 flex gap-2">
+            <input
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  sendMessage();
+                }
+              }}
+              placeholder="comment on the stream"
+              className="w-full rounded-full border border-white/10 bg-black/40 px-4 py-3 text-sm text-white outline-none placeholder:text-white/30"
+            />
+            <button
+              onClick={sendMessage}
+              className="rounded-full bg-white px-5 py-3 text-sm font-semibold text-black hover:bg-white/90"
+            >
+              Send
+            </button>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function FeedPanel({
   streamer,
   large = false,
 }: {
@@ -139,53 +381,59 @@ function FeedPane({
   )}&${parentQuery}&muted=true`;
 
   return (
-    <div className="group relative overflow-hidden rounded-[2rem] border border-white/10 bg-black/45 backdrop-blur-xl shadow-[0_0_40px_rgba(0,0,0,0.35)]">
-      <div className={classNames("absolute inset-0 bg-gradient-to-br opacity-55", streamer.color)} />
+    <div className="group relative overflow-hidden rounded-[2rem] border border-white/10 bg-black/45 backdrop-blur-xl shadow-[0_40px_90px_rgba(0,0,0,0.35)]">
+      <div
+        className={classNames(
+          "absolute inset-0 bg-gradient-to-br opacity-55",
+          streamer.color
+        )}
+      />
       <div className="absolute inset-0 bg-[radial-gradient(900px_320px_at_15%_0%,rgba(255,255,255,0.12),transparent_55%)]" />
       <div className="absolute inset-0 bg-[linear-gradient(to_bottom,rgba(255,255,255,0.05),transparent_18%,transparent_82%,rgba(255,255,255,0.03))]" />
       <div className="absolute inset-0 ring-1 ring-white/5 rounded-[2rem]" />
 
       <div
         className={classNames(
-          "relative z-10 flex h-full flex-col justify-between",
+          "relative z-10 flex h-full flex-col justify-between gap-4",
           large ? "min-h-[460px] p-4" : "min-h-[260px] p-4"
         )}
       >
-        <div className="mb-4 flex items-start justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <StatusDot live={streamer.live} />
-            <div>
-              <div className={classNames("font-semibold text-white", large ? "text-2xl" : "text-lg")}>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-3">
+              <StatusDot live={streamer.live} />
+              <div
+                className={classNames(
+                  "font-semibold text-white",
+                  large ? "text-3xl" : "text-xl"
+                )}
+              >
                 {streamer.name}
               </div>
-              <div className="text-sm text-white/55">{streamer.handle}</div>
+              <PlatformPill platform={streamer.platform} />
             </div>
+
+            <div className="mt-1 text-sm text-white/55">{streamer.handle}</div>
           </div>
-          <PlatformPill platform={streamer.platform} />
+
+          <a
+            href={streamer.channelUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="text-xs uppercase tracking-[0.2em] text-white/55 hover:text-white/80"
+          >
+            Open on Twitch →
+          </a>
         </div>
 
-        <div className="rounded-[1.5rem] border border-white/10 bg-black/35 p-3 shadow-inner shadow-black/30">
-          <div className="mb-3 flex items-center justify-between">
-            <div className="text-xs uppercase tracking-[0.25em] text-white/40">
-              Live Feed
-            </div>
-            <a
-              href={streamer.channelUrl}
-              target="_blank"
-              rel="noreferrer"
-              className="text-xs text-white/55 hover:text-white"
-            >
-              Open on Twitch →
-            </a>
-          </div>
-
+        <div className="relative">
           <div
             className={classNames(
               "relative overflow-hidden rounded-[1.25rem] border border-white/10 bg-black/40",
               large ? "aspect-video" : "aspect-[16/10]"
             )}
           >
-            <div className="pointer-events-none absolute inset-0 z-10 opacity-20 [background-image:linear-gradient(rgba(255,255,255,0.10)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.10)_1px,transparent_1px)] [background-size:40px_40px]" />
+            <div className="pointer-events-none absolute inset-0 z-10 opacity-20 [background-image:linear-gradient(rgba(255,255,255,0.10)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.10)_1px,transparent_1px)] [background-size:28px_28px]" />
             <div className="pointer-events-none absolute inset-0 z-10 bg-[linear-gradient(to_bottom,rgba(255,255,255,0.03),transparent_25%,transparent_75%,rgba(255,255,255,0.03))]" />
             <div className="absolute left-4 top-4 z-20 rounded-full border border-white/10 bg-black/45 px-3 py-1 text-[10px] uppercase tracking-[0.25em] text-white/50">
               active perspective
@@ -205,10 +453,26 @@ function FeedPane({
                 title={`${streamer.name} Twitch Stream`}
               />
             ) : (
-              <div className="grid h-full w-full place-items-center text-sm text-white/50">
+              <div className="grid h-full w-full place-items-center text-white/50">
                 Unsupported platform embed
               </div>
             )}
+          </div>
+
+          <div className="absolute right-3 top-3">
+            <StreamChatPanel
+              streamerId={streamer.channelName}
+              streamerName={streamer.name}
+            />
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between gap-4">
+          <div className="text-sm text-white/60">
+            {streamer.live ? "Active Signal" : "Dormant"}
+          </div>
+          <div className="text-sm text-white/45">
+            {streamer.title || "Main Signal"}
           </div>
         </div>
       </div>
@@ -234,7 +498,7 @@ function BroadcastWall({
   }
 
   if (mode === "focus-1" || (mode === "auto" && count === 1)) {
-    return <FeedPane streamer={feeds[0]} large />;
+    return <FeedPanel streamer={feeds[0]} large />;
   }
 
   if (mode === "focus-2" || (mode === "auto" && count === 2)) {
@@ -242,7 +506,7 @@ function BroadcastWall({
     return (
       <div className="grid gap-5 md:grid-cols-2">
         {visible.map((f) => (
-          <FeedPane key={f.id} streamer={f} large />
+          <FeedPanel key={f.id} streamer={f} large />
         ))}
       </div>
     );
@@ -252,10 +516,10 @@ function BroadcastWall({
     const visible = feeds.slice(0, 3);
     return (
       <div className="grid gap-5 lg:grid-cols-[1.35fr_.65fr]">
-        <FeedPane streamer={visible[0]} large />
+        <FeedPanel streamer={visible[0]} large />
         <div className="grid gap-5">
           {visible.slice(1).map((f) => (
-            <FeedPane key={f.id} streamer={f} />
+            <FeedPanel key={f.id} streamer={f} />
           ))}
         </div>
       </div>
@@ -267,7 +531,7 @@ function BroadcastWall({
     return (
       <div className="grid gap-5 md:grid-cols-2">
         {visible.map((f) => (
-          <FeedPane key={f.id} streamer={f} />
+          <FeedPanel key={f.id} streamer={f} />
         ))}
       </div>
     );
@@ -276,10 +540,10 @@ function BroadcastWall({
   const visible = feeds.slice(0, 5);
   return (
     <div className="grid gap-5 lg:grid-cols-[1.35fr_.65fr]">
-      <FeedPane streamer={visible[0]} large />
+      <FeedPanel streamer={visible[0]} large />
       <div className="grid gap-5 md:grid-cols-2 lg:grid-cols-1">
         {visible.slice(1, 5).map((f) => (
-          <FeedPane key={f.id} streamer={f} />
+          <FeedPanel key={f.id} streamer={f} />
         ))}
       </div>
     </div>

@@ -13,7 +13,7 @@ type Trial = {
 };
 
 const TRIALS: Trial[] = [
-{
+  {
     id: "trial-glyph",
     title: "Trial I — Glyph Gauntlet",
     subtitle: "Accuracy + survival. Hit true glyphs. Avoid bait.",
@@ -51,54 +51,81 @@ export default function GamesPage() {
   return (
     <main className="min-h-screen bg-neutral-950 text-white">
       <div className="pointer-events-none fixed inset-0 -z-10">
-        <div className="absolute inset-0 bg-[radial-gradient(900px_600px_at_70%_25%,rgba(255,255,255,0.08),transparent_60%),radial-gradient(900px_600px_at_20%_60%,rgba(255,255,255,0.05),transparent_65%)] blur-2xl" />
+        <div className="absolute inset-0 bg-[radial-gradient(900px_600px_at_70%_25%,rgba(255,255,255,0.08),transparent_55%)]" />
         <div className="absolute inset-0 bg-gradient-to-b from-black via-black/80 to-neutral-950" />
       </div>
 
       <div className="mx-auto max-w-6xl px-6 py-16">
         <div className="flex items-start justify-between gap-6">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/70">
+            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/30 px-4 py-2 text-xs uppercase tracking-[0.28em] text-white/60">
               <Swords className="h-3.5 w-3.5" />
               Trials
             </div>
+
             <h1 className="mt-5 text-4xl font-semibold tracking-tight">
               Chambers of Skill
             </h1>
+
             <p className="mt-3 max-w-2xl text-white/60">
               Competitive tests inside the Hamlo.wrld universe. Open to everyone.
               Built in-house for full control.
             </p>
+
+            <div className="mt-8 flex flex-wrap gap-3">
+              <a
+                href="/games/glyph-gauntlet"
+                className="rounded-full border border-white/20 px-6 py-3 text-sm font-semibold text-white/80 hover:bg-white/10"
+              >
+                Glyph Gauntlet
+              </a>
+              <a
+                href="/games/reflex"
+                className="rounded-full border border-white/20 px-6 py-3 text-sm font-semibold text-white/80 hover:bg-white/10"
+              >
+                Reflex
+              </a>
+              <a
+                href="/games/library"
+                className="rounded-full border border-white/20 px-6 py-3 text-sm font-semibold text-white/80 hover:bg-white/10"
+              >
+                Library
+              </a>
+            </div>
           </div>
 
           <a
             href="/"
-            className="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm text-white/80 hover:bg-white/10"
+            className="rounded-full border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white/80 hover:bg-white/10"
           >
             Return
           </a>
         </div>
 
-        <div className="mt-10 grid gap-6 md:grid-cols-2">
+        <div className="mt-12 grid gap-5 md:grid-cols-2">
           {TRIALS.map((t) => {
             const disabled = t.href === "#";
+
             return (
               <motion.a
                 key={t.id}
                 whileHover={disabled ? undefined : { y: -6 }}
-                className={classNames(
-                  "rounded-3xl border border-white/10 bg-black/35 p-6 backdrop-blur transition",
-                  disabled ? "opacity-60 cursor-not-allowed" : "hover:bg-black/30"
-                )}
                 href={disabled ? undefined : t.href}
                 onClick={(e) => {
                   if (disabled) e.preventDefault();
                 }}
+                className={classNames(
+                  "rounded-3xl border border-white/10 bg-black/35 p-6 backdrop-blur transition",
+                  disabled
+                    ? "opacity-60 cursor-not-allowed"
+                    : "hover:bg-black/30"
+                )}
               >
                 <div className="flex items-center justify-between gap-4">
                   <div className="text-xs uppercase tracking-[0.3em] text-white/40">
                     {t.status}
                   </div>
+
                   <div className="inline-flex items-center gap-2 text-xs text-white/50">
                     <Trophy className="h-4 w-4" />
                     Leaderboards (soon)
@@ -108,6 +135,7 @@ export default function GamesPage() {
                 <div className="mt-4 text-xl font-semibold text-white">
                   {t.title}
                 </div>
+
                 <div className="mt-2 text-sm text-white/60">{t.subtitle}</div>
 
                 <div className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-white/80">

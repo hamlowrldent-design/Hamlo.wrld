@@ -1,0 +1,20 @@
+{
+  "name": "control-room-server",
+  "version": "1.0.0",
+  "description": "Control Room live stream chat backend",
+  "main": "server.js",
+  "scripts": {
+    "dev": "tsx server.ts"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.21.2",
+    "ws": "^8.18.0"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.1",
+    "@types/node": "^22.15.21",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3"
+  }
+}
