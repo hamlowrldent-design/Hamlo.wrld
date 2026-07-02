@@ -398,25 +398,6 @@ export default function DropMerchPage() {
   </div>
 </section>
 
-      {/* MANIFESTO */}
-      <section className="mx-auto max-w-4xl px-6 py-32 text-center">
-        <FadeIn>
-          <p className="text-xl leading-relaxed tracking-wide text-white/60">
-            Asked the devil what she’d take — told me more than I could make.
-            <br />
-            Started living out a nightmare.
-            <br /><br />
-            Midas is not about gold.
-            <br />
-            It is about consequence.
-            <br />
-            It is about transformation under pressure.
-            <br />
-            It is about becoming what you feared you could not survive.
-          </p>
-        </FadeIn>
-      </section>
-
       {/* MUSIC */}
       <section id="music" className="mx-auto max-w-6xl px-6 py-20">
         <FadeIn>
@@ -425,16 +406,7 @@ export default function DropMerchPage() {
           </h2>
         </FadeIn>
 
-        <div className="mt-10 grid gap-10 md:grid-cols-2">
-          <div className="rounded-3xl border border-white/10 bg-black/40 p-6 backdrop-blur">
-            <div className="text-sm uppercase tracking-[0.3em] text-white/40">
-              MIDAS
-            </div>
-            <div className="mt-4 text-sm text-white/60">
-              Replace Spotify embed with your main release (CARE FUL or MIDAS).
-            </div>
-          </div>
-
+        <div className="mt-10">
           <div className="rounded-3xl border border-white/10 bg-black/40 p-6 backdrop-blur">
             <div className="text-sm uppercase tracking-[0.3em] text-white/40">
               Careful
