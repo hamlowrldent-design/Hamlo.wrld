@@ -2,16 +2,6 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
-import {
-  Music2,
-  ShoppingBag,
-  ExternalLink,
-  Mail,
-  Instagram,
-  Youtube,
-  Twitter,
-  Sparkles,
-} from "lucide-react";
 
 import EmailCapture from "@/components/EmailCapture";
 
@@ -73,10 +63,6 @@ const CONFIG = {
     twitter: "#",
   },
 };
-
-function classNames(...xs: Array<string | false | null | undefined>) {
-  return xs.filter(Boolean).join(" ");
-}
 
 const FadeIn = ({
   children,
@@ -286,8 +272,6 @@ let stars: Star[] = [];
 }
 
 export default function DropMerchPage() {
-  const [email, setEmail] = useState("");
-
   return (
     <div className="min-h-screen bg-neutral-950 text-white selection:bg-white selection:text-black font-light tracking-wide">
       <CosmicBackdrop />
