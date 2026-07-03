@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { Swords, Trophy, ExternalLink } from "lucide-react";
 
@@ -73,33 +74,33 @@ export default function GamesPage() {
             </p>
 
             <div className="mt-8 flex flex-wrap gap-3">
-              <a
+              <Link
                 href="/games/glyph-gauntlet"
                 className="rounded-full border border-white/20 px-6 py-3 text-sm font-semibold text-white/80 hover:bg-white/10"
               >
                 Glyph Gauntlet
-              </a>
-              <a
+              </Link>
+              <Link
                 href="/games/reflex"
                 className="rounded-full border border-white/20 px-6 py-3 text-sm font-semibold text-white/80 hover:bg-white/10"
               >
                 Reflex
-              </a>
-              <a
+              </Link>
+              <Link
                 href="/games/library"
                 className="rounded-full border border-white/20 px-6 py-3 text-sm font-semibold text-white/80 hover:bg-white/10"
               >
                 Library
-              </a>
+              </Link>
             </div>
           </div>
 
-          <a
+          <Link
             href="/"
             className="rounded-full border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white/80 hover:bg-white/10"
           >
             Return
-          </a>
+          </Link>
         </div>
 
         <div className="mt-12 grid gap-5 md:grid-cols-2">

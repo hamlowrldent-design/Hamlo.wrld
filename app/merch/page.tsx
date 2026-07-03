@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function MerchPage() {
   const items = [
     {
@@ -67,12 +69,12 @@ export default function MerchPage() {
             </p>
           </div>
 
-          <a
+          <Link
             href="/"
             className="rounded-full border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white/80 hover:bg-white/10"
           >
             Return
-          </a>
+          </Link>
         </div>
 
         <section className="mt-12 grid gap-6 lg:grid-cols-[1.25fr_.75fr]">
@@ -167,12 +169,12 @@ export default function MerchPage() {
                   </span>
                 </div>
                 <div className="mt-4">
-<a
+<Link
   href={item.featured ? "/merch/drop-01-signal-hoodie" : "#"}
   className="block w-full rounded-full border border-white/10 bg-white/5 px-4 py-2 text-center text-sm font-semibold text-white/80 hover:bg-white/10"
 >
   {item.cta}
-</a>
+</Link>
                 </div>
               </div>
             ))}

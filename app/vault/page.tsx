@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { ExternalLink, Lock, Unlock, Sparkles } from "lucide-react";
 import { VAULT, currentQuarterId } from "@/lib/vault";
@@ -97,12 +98,12 @@ export default function VaultPage() {
             </p>
           </div>
 
-          <a
+          <Link
             href="/"
             className="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm text-white/80 hover:bg-white/10"
           >
             Return
-          </a>
+          </Link>
         </div>
 
         <div className="mt-10 rounded-[2rem] border border-white/10 bg-black/35 p-6 backdrop-blur md:p-10">

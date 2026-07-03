@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { LISTEN_TRACKS, type Platform } from "@/lib/content";
 
 function platformPill(platform: Platform) {
@@ -31,12 +32,12 @@ export default function ListenPage() {
             </p>
           </div>
 
-          <a
+          <Link
             href="/"
             className="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm text-white/80 hover:bg-white/10"
           >
             Return
-          </a>
+          </Link>
         </div>
 
         <div className="mt-10 grid gap-4 md:grid-cols-2">

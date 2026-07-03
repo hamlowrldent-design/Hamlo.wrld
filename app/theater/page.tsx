@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useMemo, useState } from "react";
 
 function makeRoomCode() {
@@ -41,12 +42,12 @@ export default function TheaterPage() {
             </p>
           </div>
 
-          <a
+          <Link
             href="/"
             className="rounded-full border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white/80 hover:bg-white/10"
           >
             Return
-          </a>
+          </Link>
         </div>
 
         <section className="mt-12 grid gap-6 lg:grid-cols-[1.1fr_.9fr]">
@@ -84,12 +85,12 @@ export default function TheaterPage() {
               </div>
 
               <div className="flex flex-wrap gap-3">
-                <a
+                <Link
                   href={roomHref}
                   className="rounded-full bg-white px-6 py-3 text-sm font-semibold text-black hover:bg-white/90"
                 >
                   Enter Room
-                </a>
+                </Link>
 
                 <button
                   onClick={() => setRoomCode(makeRoomCode())}

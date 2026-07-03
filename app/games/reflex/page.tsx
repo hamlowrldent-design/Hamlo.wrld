@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function ReflexTrialPage() {
   return (
     <main className="min-h-screen bg-black text-white px-6 py-16">
@@ -8,18 +10,18 @@ export default function ReflexTrialPage() {
         </p>
 
         <div className="mt-10 flex flex-wrap gap-3">
-          <a
+          <Link
             href="/games"
             className="rounded-full border border-white/20 px-6 py-3 text-sm font-semibold text-white hover:bg-white/10"
           >
             Back to Trials
-          </a>
-          <a
+          </Link>
+          <Link
             href="/"
             className="rounded-full border border-white/20 px-6 py-3 text-sm font-semibold text-white hover:bg-white/10"
           >
             Home
-          </a>
+          </Link>
         </div>
       </div>
     </main>

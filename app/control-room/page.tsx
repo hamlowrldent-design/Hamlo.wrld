@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { STREAM_MEMBERS, type StreamMember, type Platform } from "@/lib/streamers";
 import { useEffect, useMemo, useRef, useState } from "react";
 
@@ -699,12 +700,12 @@ export default function ControlRoomPage() {
             </div>
           </div>
 
-          <a
+          <Link
             href="/"
             className="rounded-full border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white/80 hover:bg-white/10"
           >
             Return
-          </a>
+          </Link>
         </div>
 
         <section className="mt-10 rounded-[2rem] border border-white/10 bg-black/30 p-5 backdrop-blur-xl shadow-[0_0_40px_rgba(0,0,0,0.25)]">
