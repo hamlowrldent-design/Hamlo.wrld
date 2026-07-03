@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 function makeRoomCode() {
   return Math.random().toString(36).slice(2, 8);
@@ -10,7 +10,13 @@ function makeRoomCode() {
 export default function TheaterPage() {
   const [roomCode, setRoomCode] = useState("");
   const [displayName, setDisplayName] = useState("");
-  const suggestedRoom = useMemo(() => makeRoomCode(), []);
+  const [suggestedRoom, setSuggestedRoom] = useState("");
+
+  useEffect(() => {
+    queueMicrotask(() => {
+      setSuggestedRoom(makeRoomCode());
+    });
+  }, []);
 
   const normalizedRoom = roomCode.trim().toLowerCase() || suggestedRoom;
   const normalizedName = displayName.trim();
