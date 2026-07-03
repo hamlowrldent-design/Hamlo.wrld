@@ -359,6 +359,54 @@ export default function DropMerchPage() {
         Enter <span className="opacity-70">→</span>
       </div>
     </a>
+
+    <a
+      href="/catalog"
+      className="group rounded-3xl border border-white/10 bg-black/35 p-8 backdrop-blur transition hover:bg-black/30"
+    >
+      <div className="text-xs uppercase tracking-[0.3em] text-white/40">
+        Transmission Log
+      </div>
+      <div className="mt-3 text-2xl font-semibold text-white">Catalog</div>
+      <div className="mt-2 text-sm text-white/60">
+        Full discography across platforms. Every release, one place.
+      </div>
+      <div className="mt-6 text-sm font-semibold text-white/80">
+        Enter <span className="opacity-70">→</span>
+      </div>
+    </a>
+
+    <a
+      href="/theater"
+      className="group rounded-3xl border border-white/10 bg-black/35 p-8 backdrop-blur transition hover:bg-black/30"
+    >
+      <div className="text-xs uppercase tracking-[0.3em] text-white/40">
+        Synchronized Screening
+      </div>
+      <div className="mt-3 text-2xl font-semibold text-white">Theater</div>
+      <div className="mt-2 text-sm text-white/60">
+        Watch together in sync. Host a room, share a signal.
+      </div>
+      <div className="mt-6 text-sm font-semibold text-white/80">
+        Enter <span className="opacity-70">→</span>
+      </div>
+    </a>
+
+    <a
+      href="/control-room"
+      className="group rounded-3xl border border-white/10 bg-black/35 p-8 backdrop-blur transition hover:bg-black/30"
+    >
+      <div className="text-xs uppercase tracking-[0.3em] text-white/40">
+        Live Broadcast Wall
+      </div>
+      <div className="mt-3 text-2xl font-semibold text-white">Control Room</div>
+      <div className="mt-2 text-sm text-white/60">
+        Multiple live signals, one wall. Watch the crew broadcast.
+      </div>
+      <div className="mt-6 text-sm font-semibold text-white/80">
+        Enter <span className="opacity-70">→</span>
+      </div>
+    </a>
   </div>
 </section>
 
