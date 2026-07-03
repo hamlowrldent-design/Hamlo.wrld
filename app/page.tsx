@@ -309,60 +309,24 @@ export default function DropMerchPage() {
                   Listen
                 </a>
                 <a
-                  href="#merch"
+                  href="#portals"
                   className="rounded-full border border-white/20 px-6 py-3 text-sm font-semibold text-white hover:bg-white/10"
                 >
                   Enter the Signal
                 </a>
-<a
-  href="/vault"
-  className="rounded-full border border-white/20 px-6 py-3 text-sm font-semibold text-white/80 hover:bg-white/10"
->
-  Vault
-</a>
-
-<a
-  href="/catalog"
-  className="rounded-full border border-white/20 px-6 py-3 text-sm font-semibold text-white/80 hover:bg-white/10"
->
-  Catalog
-</a>
-
-<a
-  href="/merch"
-  className="rounded-full border border-white/20 px-6 py-3 text-sm font-semibold text-white/80 hover:bg-white/10"
->
-  Artifacts
-</a>
-
-<a
-  href="/theater"
-  className="rounded-full border border-white/20 px-6 py-3 text-sm font-semibold text-white/80 hover:bg-white/10"
->
-  Theater
-</a>
-
-<a
-  href="/control-room"
-  className="rounded-full border border-white/20 px-6 py-3 text-sm font-semibold text-white/80 hover:bg-white/10"
->
-  Control Room
-</a>
-
-<a
-  href="/games"
-  className="rounded-full border border-white/20 px-6 py-3 text-sm font-semibold text-white/80 hover:bg-white/10"
->
-  Trials
-</a>
-
+                <a
+                  href="/merch"
+                  className="rounded-full border border-white/20 px-6 py-3 text-sm font-semibold text-white/80 hover:bg-white/10"
+                >
+                  Artifacts
+                </a>
               </div>
             </div>
           </FadeIn>
         </div>
       </header>
 {/* PORTALS */}
-<section className="relative z-10">
+<section id="portals" className="relative z-10">
   <div className="mx-auto -mt-10 grid max-w-4xl gap-6 px-6 md:grid-cols-2">
     <a
       href="/vault"
