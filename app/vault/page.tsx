@@ -46,9 +46,11 @@ export default function VaultPage() {
   const qid = useMemo(() => currentQuarterId(), []);
 
   useEffect(() => {
-    const saved = window.localStorage.getItem("hamlo_vault_open");
-    const savedQ = window.localStorage.getItem("hamlo_vault_quarter");
-    if (saved === "1" && savedQ === qid) setOpen(true);
+    queueMicrotask(() => {
+      const saved = window.localStorage.getItem("hamlo_vault_open");
+      const savedQ = window.localStorage.getItem("hamlo_vault_quarter");
+      if (saved === "1" && savedQ === qid) setOpen(true);
+    });
   }, [qid]);
 
   function attempt(e: React.FormEvent) {
