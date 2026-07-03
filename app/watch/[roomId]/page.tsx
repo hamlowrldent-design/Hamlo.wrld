@@ -467,7 +467,7 @@ export default function WatchRoomPage({
   }
 
   useEffect(() => {
-    setConnectionState("connecting");
+    queueMicrotask(() => setConnectionState("connecting"));
     pushStatus(`Connecting to CoVue server for room ${roomId}...`);
 
     const ws = new WebSocket("ws://localhost:4000/ws");
