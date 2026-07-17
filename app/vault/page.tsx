@@ -1,207 +1,658 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
-import { ExternalLink, Lock, Unlock, Sparkles } from "lucide-react";
-import { VAULT, currentQuarterId } from "@/lib/vault";
+import { useEffect, useMemo, useRef, useState } from "react";
 
-type VaultItem = {
-  id: string;
+type VaultTrack = {
   title: string;
+  subtitle: string;
+  src: string;
   note: string;
-  url: string; // unlisted YouTube links
+  tag: string;
 };
 
-const VAULT_ITEMS: VaultItem[] = [
+type CollectionKey = "vault" | "bandlab";
+
+const VAULT_TRACKS: VaultTrack[] = [
   {
-    id: "v1",
-    title: "Unreleased // Transmission 01",
-    note: "Unlisted YouTube link goes here.",
-    url: "#",
+    title: "See The Fire",
+    subtitle: "kaine monni anime",
+    src: "/audio/kaine-monni-anime.wav",
+    note: "Cinematic, emotional, and built for the first public archive pass.",
+    tag: "Vault Master",
   },
   {
-    id: "v2",
-    title: "Unreleased // Transmission 02",
-    note: "Unlisted YouTube link goes here.",
-    url: "#",
+    title: "80's Pop",
+    subtitle: "retro glow",
+    src: "/audio/80s-pop.wav",
+    note: "Bright, nostalgic energy for the archive and future public rollout.",
+    tag: "Vault Master",
   },
   {
-    id: "v3",
-    title: "Unreleased // Transmission 03",
-    note: "Unlisted YouTube link goes here.",
-    url: "#",
+    title: "We Smoke Our Weed",
+    subtitle: "late-night drift",
+    src: "/audio/we-smoke-our-weed.wav",
+    note: "Floating, loose, and meant to sit deep in the catalog later.",
+    tag: "Vault Master",
+  },
+  {
+    title: "Right Plan",
+    subtitle: "forward motion",
+    src: "/audio/right-plan.wav",
+    note: "Focused motion track. Good candidate for catalog rotation later.",
+    tag: "Vault Master",
+  },
+  {
+    title: "Wont Say",
+    subtitle: "quiet pressure",
+    src: "/audio/wont-say.wav",
+    note: "Minimal and moody. Keep here now, move to catalog when ready.",
+    tag: "Vault Master",
   },
 ];
 
-function classNames(...xs: Array<string | false | null | undefined>) {
-  return xs.filter(Boolean).join(" ");
+const BANDLAB_TRACKS: VaultTrack[] = [
+  {
+    title: "Questions",
+    subtitle: "featured Bandlab cut",
+    src: "/audio/library/bandlab/featured/questions.mp3",
+    note: "A featured Bandlab track for the public-facing vault shortlist.",
+    tag: "Featured",
+  },
+  {
+    title: "Leanin",
+    subtitle: "featured Bandlab cut",
+    src: "/audio/library/bandlab/featured/leanin.mp3",
+    note: "A second featured cut kept light and ready for rotation.",
+    tag: "Featured",
+  },
+  {
+    title: "Without U",
+    subtitle: "featured Bandlab cut",
+    src: "/audio/library/bandlab/featured/without-u.mp3",
+    note: "A featured entry for the smaller curated Bandlab vault set.",
+    tag: "Featured",
+  },
+  {
+    title: "Growth",
+    subtitle: "featured Bandlab cut",
+    src: "/audio/library/bandlab/featured/growth.mp3",
+    note: "A featured cut from the Bandlab archive batch.",
+    tag: "Featured",
+  },
+  {
+    title: "Cita",
+    subtitle: "featured Bandlab cut",
+    src: "/audio/library/bandlab/featured/cita.mp3",
+    note: "A featured cut from the Bandlab archive batch.",
+    tag: "Featured",
+  },
+  {
+    title: "Storytime",
+    subtitle: "featured Bandlab cut",
+    src: "/audio/library/bandlab/featured/storytime.mp3",
+    note: "A featured cut from the Bandlab archive batch.",
+    tag: "Featured",
+  },
+  {
+    title: "Speed Fast",
+    subtitle: "featured Bandlab cut",
+    src: "/audio/library/bandlab/featured/speed-fast.mp3",
+    note: "A featured cut from the Bandlab archive batch.",
+    tag: "Featured",
+  },
+  {
+    title: "Stack It Up",
+    subtitle: "featured Bandlab cut",
+    src: "/audio/library/bandlab/featured/stack-it-up.mp3",
+    note: "A featured cut from the Bandlab archive batch.",
+    tag: "Featured",
+  },
+];
+
+const VAULT_ROTATION_START = new Date("2026-07-01T00:00:00");
+const VAULT_CODES = ["Frosty", "Glacier", "Thaw", "Aurora"];
+
+function getSeasonalVaultCode(now = new Date()) {
+  const monthsSinceStart =
+    (now.getFullYear() - VAULT_ROTATION_START.getFullYear()) * 12 +
+    (now.getMonth() - VAULT_ROTATION_START.getMonth());
+
+  const rotationStep = Math.floor(monthsSinceStart / 3);
+  const idx =
+    ((rotationStep % VAULT_CODES.length) + VAULT_CODES.length) %
+    VAULT_CODES.length;
+
+  return VAULT_CODES[idx];
+}
+
+function shuffleIndices(length: number) {
+  const arr = Array.from({ length }, (_, i) => i);
+  for (let i = arr.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function formatTime(seconds: number) {
+  if (!Number.isFinite(seconds)) return "0:00";
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60)
+    .toString()
+    .padStart(2, "0");
+  return `${mins}:${secs}`;
 }
 
 export default function VaultPage() {
-  const [code, setCode] = useState("");
-  const [open, setOpen] = useState(false);
-  const [shake, setShake] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const autoPlayRef = useRef(false);
 
-  const qid = useMemo(() => currentQuarterId(), []);
+  const [mounted, setMounted] = useState(false);
+  const [vaultCode, setVaultCode] = useState("Frosty");
+  const [entryCode, setEntryCode] = useState("");
+  const [unlocked, setUnlocked] = useState(false);
+  const [collection, setCollection] = useState<CollectionKey>("vault");
+  const [activeIndex, setActiveIndex] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [duration, setDuration] = useState(0);
+  const [progress, setProgress] = useState(0);
+  const [shuffle, setShuffle] = useState(false);
+  const [autoAdvance, setAutoAdvance] = useState(true);
+  const [isScrubbing, setIsScrubbing] = useState(false);
+
+  const currentTracks = collection === "vault" ? VAULT_TRACKS : BANDLAB_TRACKS;
+  const activeTrack = useMemo(
+    () => currentTracks[activeIndex] ?? currentTracks[0],
+    [activeIndex, currentTracks]
+  );
+
+  const queue = useMemo(
+    () =>
+      shuffle
+        ? shuffleIndices(currentTracks.length)
+        : currentTracks.map((_, i) => i),
+    [shuffle, currentTracks.length]
+  );
 
   useEffect(() => {
-    queueMicrotask(() => {
-      const saved = window.localStorage.getItem("hamlo_vault_open");
-      const savedQ = window.localStorage.getItem("hamlo_vault_quarter");
-      if (saved === "1" && savedQ === qid) setOpen(true);
-    });
-  }, [qid]);
+    setMounted(true);
+    setVaultCode(getSeasonalVaultCode(new Date()));
+  }, []);
 
-  function attempt(e: React.FormEvent) {
-    e.preventDefault();
-    const ok = code.trim().toUpperCase() === VAULT.accessCode.toUpperCase();
+  useEffect(() => {
+    if (!mounted) return;
+    const saved = window.localStorage.getItem("hamlo-vault-unlocked");
+    if (saved && saved.toLowerCase() === vaultCode.toLowerCase()) {
+      setUnlocked(true);
+    }
+  }, [mounted, vaultCode]);
 
-    if (!ok) {
-      setShake(true);
-      setTimeout(() => setShake(false), 450);
+  useEffect(() => {
+    setActiveIndex(0);
+    setProgress(0);
+    setDuration(0);
+    setIsPlaying(false);
+    autoPlayRef.current = false;
+
+    const audio = audioRef.current;
+    if (audio) {
+      audio.pause();
+      audio.currentTime = 0;
+      audio.load();
+    }
+  }, [collection]);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const shouldResume = autoPlayRef.current;
+
+    audio.pause();
+    audio.currentTime = 0;
+    setProgress(0);
+    setDuration(0);
+    setIsPlaying(false);
+    audio.load();
+
+    if (!shouldResume) return;
+
+    const onCanPlay = async () => {
+      try {
+        await audio.play();
+        setIsPlaying(true);
+      } catch {
+        setIsPlaying(false);
+      }
+    };
+
+    audio.addEventListener("canplay", onCanPlay, { once: true });
+
+    return () => {
+      audio.removeEventListener("canplay", onCanPlay);
+    };
+  }, [activeTrack.src]);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const onTimeUpdate = () => {
+      if (!isScrubbing) {
+        setProgress(audio.currentTime);
+      }
+    };
+
+    const onLoadedMetadata = () => setDuration(audio.duration || 0);
+
+    const onEnded = () => {
+      if (!autoAdvance) {
+        autoPlayRef.current = false;
+        setIsPlaying(false);
+        return;
+      }
+
+      autoPlayRef.current = true;
+      setActiveIndex((current) => {
+        const position = queue.indexOf(current);
+        const nextPosition = (position + 1) % queue.length;
+        return queue[nextPosition];
+      });
+    };
+
+    audio.addEventListener("timeupdate", onTimeUpdate);
+    audio.addEventListener("loadedmetadata", onLoadedMetadata);
+    audio.addEventListener("ended", onEnded);
+
+    return () => {
+      audio.removeEventListener("timeupdate", onTimeUpdate);
+      audio.removeEventListener("loadedmetadata", onLoadedMetadata);
+      audio.removeEventListener("ended", onEnded);
+    };
+  }, [autoAdvance, queue, isScrubbing]);
+
+  const unlockVault = () => {
+    const clean = entryCode.trim();
+    if (!clean) return;
+
+    if (clean.toLowerCase() === vaultCode.toLowerCase()) {
+      window.localStorage.setItem("hamlo-vault-unlocked", vaultCode);
+      setUnlocked(true);
+      setEntryCode("");
+    }
+  };
+
+  const relockVault = () => {
+    window.localStorage.removeItem("hamlo-vault-unlocked");
+    setUnlocked(false);
+    setEntryCode("");
+    setIsPlaying(false);
+    autoPlayRef.current = false;
+  };
+
+  const playPause = async () => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    if (isPlaying) {
+      audio.pause();
+      setIsPlaying(false);
+      autoPlayRef.current = false;
       return;
     }
 
-    setOpen(true);
-    window.localStorage.setItem("hamlo_vault_open", "1");
-    window.localStorage.setItem("hamlo_vault_quarter", qid);
+    try {
+      autoPlayRef.current = true;
+      await audio.play();
+      setIsPlaying(true);
+    } catch {
+      setIsPlaying(false);
+    }
+  };
+
+  const seek = (value: number) => {
+    const audio = audioRef.current;
+    if (!audio) return;
+    audio.currentTime = value;
+    setProgress(value);
+  };
+
+  const nextTrack = () => {
+    autoPlayRef.current = isPlaying;
+    setActiveIndex((current) => {
+      const position = queue.indexOf(current);
+      const nextPosition = (position + 1) % queue.length;
+      return queue[nextPosition];
+    });
+  };
+
+  const prevTrack = () => {
+    autoPlayRef.current = isPlaying;
+    setActiveIndex((current) => {
+      const position = queue.indexOf(current);
+      const prevPosition = (position - 1 + queue.length) % queue.length;
+      return queue[prevPosition];
+    });
+  };
+
+  const selectTrack = (index: number) => {
+    autoPlayRef.current = isPlaying;
+    setActiveIndex(index);
+  };
+
+  if (!mounted) {
+    return (
+      <main className="min-h-screen bg-neutral-950 text-white">
+        <div className="mx-auto flex min-h-screen max-w-5xl items-center px-6 py-14">
+          <div className="w-full rounded-[2rem] border border-white/10 bg-black/35 p-8 backdrop-blur-xl md:p-12">
+            <div className="text-xs uppercase tracking-[0.35em] text-white/40">
+              Hamlo.wrld Vault
+            </div>
+            <h1 className="mt-4 text-5xl font-semibold tracking-tight md:text-7xl">
+              Vault
+            </h1>
+          </div>
+        </div>
+      </main>
+    );
   }
 
-  function relock() {
-    setOpen(false);
-    window.localStorage.setItem("hamlo_vault_open", "0");
-    window.localStorage.setItem("hamlo_vault_quarter", qid);
-    setCode("");
+  if (!unlocked) {
+    return (
+      <main className="min-h-screen bg-neutral-950 text-white">
+        <div className="pointer-events-none fixed inset-0 -z-10">
+          <div className="absolute inset-0 bg-[radial-gradient(900px_500px_at_20%_10%,rgba(255,255,255,0.08),transparent_55%),radial-gradient(700px_500px_at_80%_20%,rgba(255,255,255,0.05),transparent_60%),radial-gradient(900px_700px_at_50%_95%,rgba(255,255,255,0.05),transparent_70%)] blur-3xl" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/60 to-neutral-950" />
+        </div>
+
+        <div className="mx-auto flex min-h-screen max-w-5xl items-center px-6 py-14">
+          <div className="w-full rounded-[2rem] border border-white/10 bg-black/35 p-8 backdrop-blur-xl md:p-12">
+            <div className="text-xs uppercase tracking-[0.35em] text-white/40">
+              Hamlo.wrld Vault
+            </div>
+            <h1 className="mt-4 text-5xl font-semibold tracking-tight md:text-7xl">
+              Locked Archive
+            </h1>
+            <p className="mt-4 max-w-2xl text-white/60">
+              Enter the seasonal vault code to access the private listening room.
+            </p>
+
+            <div className="mt-8 max-w-md">
+              <label className="mb-2 block text-xs uppercase tracking-[0.25em] text-white/40">
+                Vault Code
+              </label>
+              <input
+                value={entryCode}
+                onChange={(e) => setEntryCode(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") unlockVault();
+                }}
+                placeholder="enter the code"
+                className="w-full rounded-[1.25rem] border border-white/10 bg-black/40 px-4 py-3 text-white outline-none placeholder:text-white/30"
+              />
+              <button
+                onClick={unlockVault}
+                className="mt-4 rounded-full bg-white px-6 py-3 text-sm font-semibold text-black hover:bg-white/90"
+              >
+                Enter Vault
+              </button>
+            </div>
+
+            <div className="mt-6 text-sm text-white/45">
+              Seasonal code rotates every few seasons. Current rotation slot is active
+              for trusted users.
+            </div>
+          </div>
+        </div>
+      </main>
+    );
   }
 
   return (
     <main className="min-h-screen bg-neutral-950 text-white">
-      {/* Atmosphere */}
       <div className="pointer-events-none fixed inset-0 -z-10">
-        <div className="absolute inset-0 bg-[radial-gradient(900px_600px_at_20%_10%,rgba(255,255,255,0.09),transparent_60%),radial-gradient(900px_600px_at_80%_35%,rgba(255,255,255,0.06),transparent_65%),radial-gradient(1000px_700px_at_45%_90%,rgba(255,255,255,0.05),transparent_70%)] blur-2xl" />
-        <div className="absolute inset-0 opacity-[0.08] mix-blend-overlay [background-image:url('data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22160%22 height=%22160%22%3E%3Cfilter id=%22n%22%3E%3CfeTurbulence type=%22fractalNoise%22 baseFrequency=%220.9%22 numOctaves=%222%22 stitchTiles=%22stitch%22/%3E%3C/filter%3E%3Crect width=%22160%22 height=%22160%22 filter=%22url(%23n)%22 opacity=%220.55%22/%3E%3C/svg%3E')]"/>
-        <div className="absolute inset-0 bg-gradient-to-b from-black via-black/80 to-neutral-950" />
+        <div className="absolute inset-0 bg-[radial-gradient(900px_500px_at_20%_10%,rgba(255,255,255,0.08),transparent_55%),radial-gradient(700px_500px_at_80%_20%,rgba(255,255,255,0.05),transparent_60%),radial-gradient(900px_700px_at_50%_95%,rgba(255,255,255,0.05),transparent_70%)] blur-3xl" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/60 to-neutral-950" />
       </div>
 
-      <div className="mx-auto max-w-5xl px-6 py-16">
-        <div className="flex items-start justify-between gap-6">
+      <div className="mx-auto max-w-6xl px-6 py-14">
+        <div className="flex flex-col gap-6 md:flex-row md:items-start md:justify-between">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/70">
-              <Sparkles className="h-3.5 w-3.5" />
-              Interdimensional Chamber
+            <div className="text-xs uppercase tracking-[0.35em] text-white/40">
+              Hamlo.wrld Vault
             </div>
-            <h1 className="mt-5 text-4xl font-semibold tracking-tight">
-              The Vault
+            <h1 className="mt-4 text-5xl font-semibold tracking-tight md:text-7xl">
+              Vault
             </h1>
-            <p className="mt-3 max-w-2xl text-white/60">
-              A sealed room between eras. Unreleased transmissions live here.
-              Code rotates quarterly. Current cycle: <span className="text-white/80">{qid}</span>
+            <p className="mt-4 max-w-3xl text-white/60">
+              A private listening archive for the first songs. These tracks stay here
+              for now and can move into the public catalog later.
             </p>
           </div>
 
-          <Link
-            href="/"
-            className="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm text-white/80 hover:bg-white/10"
-          >
-            Return
-          </Link>
+          <div className="flex flex-wrap gap-3">
+            <Link
+              href="/"
+              className="rounded-full border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white/80 hover:bg-white/10"
+            >
+              Home
+            </Link>
+            <Link
+              href="/catalog"
+              className="rounded-full border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white/80 hover:bg-white/10"
+            >
+              Catalog
+            </Link>
+            <Link
+              href="/music"
+              className="rounded-full border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white/80 hover:bg-white/10"
+            >
+              Music
+            </Link>
+            <button
+              onClick={relockVault}
+              className="rounded-full border border-white/15 bg-white/5 px-5 py-3 text-sm font-semibold text-white/80 hover:bg-white/10"
+            >
+              Relock
+            </button>
+          </div>
         </div>
 
-        <div className="mt-10 rounded-[2rem] border border-white/10 bg-black/35 p-6 backdrop-blur md:p-10">
-          {!open ? (
-            <div className="grid gap-8 md:grid-cols-[1.1fr_.9fr] md:items-center">
+        <section className="mt-6 rounded-[2rem] border border-white/10 bg-black/35 p-5 backdrop-blur-xl">
+          <div className="flex flex-wrap gap-3">
+            <button
+              onClick={() => setCollection("vault")}
+              className={`rounded-full px-5 py-3 text-sm font-semibold ${
+                collection === "vault"
+                  ? "bg-white text-black"
+                  : "border border-white/15 bg-white/5 text-white/80 hover:bg-white/10"
+              }`}
+            >
+              Vault Archive
+            </button>
+            <button
+              onClick={() => setCollection("bandlab")}
+              className={`rounded-full px-5 py-3 text-sm font-semibold ${
+                collection === "bandlab"
+                  ? "bg-white text-black"
+                  : "border border-white/15 bg-white/5 text-white/80 hover:bg-white/10"
+              }`}
+            >
+              Bandlab Featured
+            </button>
+          </div>
+        </section>
+
+        <section className="mt-12 grid gap-6 lg:grid-cols-[1.15fr_.85fr]">
+          <div className="rounded-[2rem] border border-white/10 bg-black/35 p-6 backdrop-blur-xl">
+            <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
-                <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/70">
-                  <Lock className="h-3.5 w-3.5" />
-                  Locked
+                <div className="text-xs uppercase tracking-[0.25em] text-white/40">
+                  Now Playing
                 </div>
-                <div className="mt-4 text-lg font-semibold text-white">
-                  Speak the seasonal word.
-                </div>
-                <p className="mt-2 text-sm text-white/60">
-                  The chamber listens for the correct frequency.
-                </p>
+                <h2 className="mt-3 text-3xl font-semibold tracking-tight">
+                  {activeTrack.title}
+                </h2>
+                <div className="mt-2 text-white/55">{activeTrack.subtitle}</div>
               </div>
 
-              <motion.form
-                onSubmit={attempt}
-                animate={shake ? { x: [-8, 8, -6, 6, -3, 3, 0] } : { x: 0 }}
-                transition={{ duration: 0.45 }}
-                className="flex flex-col gap-3"
-              >
+              <div className="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-xs uppercase tracking-[0.25em] text-white/60">
+                {activeTrack.tag}
+              </div>
+            </div>
+
+            <div className="mt-6 rounded-[1.75rem] border border-white/10 bg-black/45 p-5">
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  onClick={prevTrack}
+                  className="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white/80 hover:bg-white/10"
+                >
+                  Prev
+                </button>
+                <button
+                  onClick={playPause}
+                  className="rounded-full bg-white px-5 py-2 text-sm font-semibold text-black hover:bg-white/90"
+                >
+                  {isPlaying ? "Pause" : "Play"}
+                </button>
+                <button
+                  onClick={nextTrack}
+                  className="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white/80 hover:bg-white/10"
+                >
+                  Next
+                </button>
+
+                <label className="ml-auto flex items-center gap-2 text-sm text-white/60">
+                  <input
+                    type="checkbox"
+                    checked={shuffle}
+                    onChange={(e) => setShuffle(e.target.checked)}
+                  />
+                  Shuffle
+                </label>
+
+                <label className="flex items-center gap-2 text-sm text-white/60">
+                  <input
+                    type="checkbox"
+                    checked={autoAdvance}
+                    onChange={(e) => setAutoAdvance(e.target.checked)}
+                  />
+                  Auto-next
+                </label>
+
+                <div className="w-full text-sm text-white/50 md:w-auto">
+                  {formatTime(progress)} / {formatTime(duration)}
+                </div>
+              </div>
+
+              <div className="mt-5">
                 <input
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  placeholder="Enter code"
-                  className="w-full rounded-2xl border border-white/15 bg-black/55 px-4 py-3 text-sm text-white placeholder:text-white/35 focus:outline-none focus:ring-2 focus:ring-white/20"
+                  type="range"
+                  min={0}
+                  max={Math.max(duration, 0)}
+                  step="0.01"
+                  value={progress}
+                  onPointerDown={() => setIsScrubbing(true)}
+                  onPointerUp={() => setIsScrubbing(false)}
+                  onTouchStart={() => setIsScrubbing(true)}
+                  onTouchEnd={() => setIsScrubbing(false)}
+                  onInput={(e) => {
+                    const value = Number((e.target as HTMLInputElement).value);
+                    const audio = audioRef.current;
+                    if (audio) audio.currentTime = value;
+                    setProgress(value);
+                  }}
+                  onChange={(e) => {
+                    const value = Number((e.target as HTMLInputElement).value);
+                    const audio = audioRef.current;
+                    if (audio) audio.currentTime = value;
+                    setProgress(value);
+                  }}
+                  className="h-2 w-full cursor-pointer appearance-none rounded-full bg-white/10"
                 />
-                <button
-                  type="submit"
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-5 py-3 text-sm font-semibold text-black hover:bg-white/90"
-                >
-                  Unlock <Unlock className="h-4 w-4 opacity-70" />
-                </button>
-                <div className="text-xs text-white/45">
-                  This is a lightweight gate (vibe-first). We can upgrade to real auth later.
-                </div>
-              </motion.form>
-            </div>
-          ) : (
-            <div>
-              <div className="flex flex-wrap items-center justify-between gap-3">
-                <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1 text-xs text-white/70">
-                  <Unlock className="h-3.5 w-3.5" />
-                  Open
-                </div>
-                <button
-                  onClick={relock}
-                  className="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm text-white/80 hover:bg-white/10"
-                >
-                  Relock
-                </button>
               </div>
 
-              <div className="mt-7 grid gap-4 md:grid-cols-2">
-                {VAULT_ITEMS.map((x) => {
-                  const disabled = x.url === "#";
-                  return (
-                    <a
-                      key={x.id}
-                      href={disabled ? undefined : x.url}
-                      target={disabled ? undefined : "_blank"}
-                      rel={disabled ? undefined : "noreferrer"}
-                      className={classNames(
-                        "rounded-3xl border border-white/10 bg-black/40 p-5 backdrop-blur transition",
-                        disabled
-                          ? "opacity-60 cursor-not-allowed"
-                          : "hover:bg-black/35"
-                      )}
-                      onClick={(e) => {
-                        if (disabled) e.preventDefault();
-                      }}
-                    >
-                      <div className="text-xs uppercase tracking-[0.3em] text-white/40">
-                        Unreleased
-                      </div>
-                      <div className="mt-2 text-lg font-semibold text-white">
-                        {x.title}
-                      </div>
-                      <div className="mt-2 text-sm text-white/60">{x.note}</div>
-                      <div className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-white/80">
-                        Open <ExternalLink className="h-4 w-4 opacity-70" />
-                      </div>
-                    </a>
-                  );
-                })}
+              <div className="mt-4 text-sm text-white/45">
+                This vault version plays the WAV and MP3 files from the public audio folder.
               </div>
 
-              <div className="mt-8 text-sm text-white/50">
-                Tip: paste unlisted YouTube links into <span className="text-white/70">VAULT_ITEMS</span>.
+              <audio ref={audioRef} src={activeTrack.src} preload="metadata" />
+            </div>
+
+            <div className="mt-6 grid gap-4 md:grid-cols-2">
+              {currentTracks.map((track, index) => {
+                const selected = index === activeIndex;
+                return (
+                  <button
+                    key={track.src}
+                    onClick={() => selectTrack(index)}
+                    className={`rounded-[1.5rem] border p-4 text-left transition ${
+                      selected
+                        ? "border-white/25 bg-white/10"
+                        : "border-white/10 bg-black/30 hover:bg-white/5"
+                    }`}
+                  >
+                    <div className="text-xs uppercase tracking-[0.25em] text-white/40">
+                      Track {index + 1}
+                    </div>
+                    <div className="mt-2 text-lg font-semibold text-white">
+                      {track.title}
+                    </div>
+                    <div className="mt-1 text-sm text-white/55">{track.subtitle}</div>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div className="rounded-[2rem] border border-white/10 bg-black/35 p-6 backdrop-blur-xl">
+            <div className="text-xs uppercase tracking-[0.25em] text-white/40">
+              Vault Notes
+            </div>
+
+            <div className="mt-5 space-y-4 text-sm leading-6 text-white/60">
+              <p>
+                This is the private archive home. Songs live here first before they
+                graduate into the public catalog.
+              </p>
+              <p>
+                Later, we can add cover art, lyrics, credits, and a more illustrated
+                release presentation.
+              </p>
+              <p>
+                For now, the listening experience stays clean and focused.
+              </p>
+            </div>
+
+            <div className="mt-6 rounded-[1.5rem] border border-white/10 bg-black/30 p-4">
+              <div className="text-xs uppercase tracking-[0.25em] text-white/40">
+                Current File
+              </div>
+              <div className="mt-2 break-all text-sm text-white/65">
+                {activeTrack.src}
               </div>
             </div>
-          )}
-        </div>
+
+            <div className="mt-6 rounded-[1.5rem] border border-white/10 bg-black/30 p-4">
+              <div className="text-xs uppercase tracking-[0.25em] text-white/40">
+                Seasonal Vault Code
+              </div>
+              <div className="mt-2 text-sm text-white/60">
+                Rotation is active for trusted users. Current slot is seasonal.
+              </div>
+            </div>
+
+            <div className="mt-6 rounded-[1.5rem] border border-white/10 bg-black/30 p-4">
+              <div className="text-xs uppercase tracking-[0.25em] text-white/40">
+                Public Move Later
+              </div>
+              <div className="mt-2 text-sm text-white/60">
+                Use Catalog later for featured releases. The Vault is the staging room.
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
     </main>
   );
